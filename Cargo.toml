@@ -7,6 +7,9 @@ tokio = "1"
 serde = "1"
 rand = "0.8"
 [[bin]]
+name = "dualhelix"
+path = "main.rs"
+[[bin]]
 name = "chain_a"
 path = "chain_a/chain_a.rs"
 [[bin]]
