@@ -10,7 +10,6 @@ pub struct block {
 }
 pub async fn run_chain_b(mut rx: Receiver<Block>) {
     println!("Chain B (Proof of Authority) is running...");
-    while let Some(block) = rx.recv().await {
-        println!(Chain B received block: {:?}", block);
-    }
-}
+    while let Some(block) = rx.recv().await }
+        println!("Chain B received block: {:?}", block);
+    
