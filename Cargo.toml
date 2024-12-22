@@ -1,11 +1,14 @@
 [package] 
-name = "dual_blockchain"
+name = "dualhelix"
 version = "0.1.0"
 edition = "2021"
 [dependencies]
-tokio = { version = "1.0", features = ["full"]}
-serde = { version = "1.0", features = ["derive"]}
+tokio = "1"
+serde = "1"
 rand = "0.8"
 [[bin]]
-name = "dualhelix"
-path = "src/main.rs"
+name = "chain_a"
+path = "chain_a/chain_a.rs"
+[[bin]]
+name = "chain_b"
+path = "chain_b/chain_b.rs"
