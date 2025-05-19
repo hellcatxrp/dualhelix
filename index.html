@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualHelix Capital</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@300;400;600;800&display=swap');
+       
+        :root {
+            --primary: #47f0ee;
+            --secondary: #9B59B6;
+            --accent: #F1C40F;
+            --dark: #0a0a12;
+            --light: #f5f5f7;
+        }
+       
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            cursor: none;
+            overflow-x: hidden;
+        }
+       
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+       
+        .cursor {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            position: fixed;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+        }
+       
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--primary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.6;
+            transform: translate(-50%, -50%);
+        }
+       
+        .hover-grow:hover {
+            cursor: pointer;
+        }
+       
+        .block-section {
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.8s ease;
+        }
+       
+        .block-section:hover {
+            background-color: rgba(155, 89, 182, 0.1);
+        }
+       
+        .animated-text {
+            overflow: hidden;
+            position: relative;
+        }
+       
+        .animated-text span {
+            display: inline-block;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+        }
+       
+        .animated-text.visible span {
+            transform: translateY(0);
+            opacity: 1;
+        }
+       
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+       
+        .wireframe {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.4;
+        }
+       
+        .helix-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+        }
+       
+        /* For PDF optimization */
+        @media print {
+            .animate-on-scroll {
+                opacity: 1 !important;
+                transform: translateY(0) !important;
+            }
+           
+            canvas, .cursor, .cursor-follower {
+                display: none !important;
+            }
+           
+            .block-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+       
+        /* Horizontal color bar */
+        .color-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            width: 100%;
+        }
+       
+        /* Menu XL inspired blocks */
+        .feature-block {
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+       
+        .feature-block:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(71, 240, 238, 0.2);
+        }
+       
+        .feature-block::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+       
+        .feature-block:hover::after {
+            transform: scaleX(1);
+        }
+       
+        /* Hyperbolic inspired elements */
+        .grid-dots {
+            background-image: radial-gradient(var(--primary) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.15;
+        }
+       
+        .diagonal-line {
+            position: absolute;
+            height: 1px;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            transform: rotate(-5deg) scale(1.5);
+        }
+    </style>
+</head>
+<body class="relative">
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+   
+    <!-- Hero Section -->
+    <header class="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
+        <div class="absolute inset-0 grid-dots"></div>
+        <div class="diagonal-line" style="top: 15%;"></div>
+        <div class="diagonal-line" style="top: 45%;"></div>
+        <div class="diagonal-line" style="top: 75%;"></div>
+       
+        <div class="container mx-auto px-6 py-12 relative z-10">
+            <div class="text-center mb-16">
+                <h1 class="text-6xl md:text-8xl font-extrabold mb-6 animated-text visible">
+                    <span style="color: var(--primary);">Dual</span>
+                    <span style="color: var(--secondary);">Helix</span>
+                    <span class="text-white">Capital</span>
+                </h1>
+               
+                <p class="text-xl md:text-2xl max-w-3xl mx-auto opacity-75 mb-10 animated-text visible">
+                    <span>Where blockchain innovation and financial intelligence converge.</span>
+                </p>
+               
+                <div class="mt-12">
+                    <a href="https://discord.gg/3nqZCmzwbe" class="hover-grow inline-block bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105">
+                        Join Our Discord
+                    </a>
+                </div>
+            </div>
+        </div>
+       
+        <div class="helix-container" id="helix-animation"></div>
+        <div class="color-bar"></div>
+    </header>
+   
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-24">
+        <!-- About Section - Menu XL Block Style -->
+        <section class="block-section mb-32 p-10 rounded-lg">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-5xl font-bold mb-12 animated-text">
+                    <span style="color: var(--primary);">About</span>
+                    <span> DualHelix Capital</span>
+                </h2>
+               
+                <div class="grid-layout">
+                    <div class="feature-block p-8 bg-gray-900 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--primary);">Our Mission</h3>
+                        <p class="opacity-80 leading-relaxed">DualHelix Capital builds a bridge between traditional finance and the blockchain ecosystem, empowering traders and investors with cutting-edge tools and insights.</p>
+                    </div>
+                   
+                    <div class="feature-block p-8 bg-gray-900 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--secondary);">Our Community</h3>
+                        <p class="opacity-80 leading-relaxed">Join a thriving network of traders, developers, and financial experts collaborating to navigate the evolving landscape of decentralized finance.</p>
+                    </div>
+                   
+                    <div class="feature-block p-8 bg-gray-900 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--accent);">Our Approach</h3>
+                        <p class="opacity-80 leading-relaxed">We combine data-driven analysis with innovative AI tools to identify opportunities across markets and blockchain ecosystems.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+       
+        <!-- Features Section - Hyperbolic Style -->
+        <section class="block-section mb-32 p-10 rounded-lg relative">
+            <div class="absolute inset-0 grid-dots"></div>
+            <div class="max-w-5xl mx-auto relative z-10">
+                <h2 class="text-5xl font-bold mb-16 animated-text">
+                    <span style="color: var(--secondary);">Discord</span>
+                    <span> Features</span>
+                </h2>
+               
+                <div class="space-y-24">
+                    <div class="flex flex-col md:flex-row items-center md:space-x-12">
+                        <div class="md:w-1/2 mb-10 md:mb-0">
+                            <div class="relative h-80 w-full rounded-lg overflow-hidden bg-black">
+                                <div class="absolute inset-0 grid-dots"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="text-8xl font-bold" style="color: var(--primary);">01</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:w-1/2">
+                            <h3 class="text-3xl font-bold mb-6 mono" style="color: var(--primary);">Real-time Trading Signals</h3>
+                            <p class="text-lg opacity-80 leading-relaxed mb-8">Receive automated trading signals powered by our proprietary AI algorithms. Our webhooks deliver timely market insights directly to dedicated channels.</p>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--primary);">→</span>
+                                    <span>24/7 market monitoring across exchanges</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--primary);">→</span>
+                                    <span>Customizable alert thresholds</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--primary);">→</span>
+                                    <span>Performance tracking and analytics</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                   
+                    <div class="flex flex-col md:flex-row-reverse items-center md:space-x-reverse md:space-x-12">
+                        <div class="md:w-1/2 mb-10 md:mb-0">
+                            <div class="relative h-80 w-full rounded-lg overflow-hidden bg-black">
+                                <div class="absolute inset-0 grid-dots"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="text-8xl font-bold" style="color: var(--secondary);">02</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:w-1/2">
+                            <h3 class="text-3xl font-bold mb-6 mono" style="color: var(--secondary);">Blockchain Analytics Hub</h3>
+                            <p class="text-lg opacity-80 leading-relaxed mb-8">Access real-time on-chain data visualizations and insights. Monitor whale movements, smart contract interactions, and emerging market trends.</p>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--secondary);">→</span>
+                                    <span>Multi-chain transaction monitoring</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--secondary);">→</span>
+                                    <span>Smart money wallet tracking</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--secondary);">→</span>
+                                    <span>Gas optimization alerts</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                   
+                    <div class="flex flex-col md:flex-row items-center md:space-x-12">
+                        <div class="md:w-1/2 mb-10 md:mb-0">
+                            <div class="relative h-80 w-full rounded-lg overflow-hidden bg-black">
+                                <div class="absolute inset-0 grid-dots"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="text-8xl font-bold" style="color: var(--accent);">03</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:w-1/2">
+                            <h3 class="text-3xl font-bold mb-6 mono" style="color: var(--accent);">AI Trading Assistant</h3>
+                            <p class="text-lg opacity-80 leading-relaxed mb-8">Interact with our advanced AI assistant to analyze trades, explain market conditions, and receive personalized recommendations based on your trading style.</p>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--accent);">→</span>
+                                    <span>Natural language trade analysis</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--accent);">→</span>
+                                    <span>Portfolio optimization suggestions</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="mr-3 text-xl" style="color: var(--accent);">→</span>
+                                    <span>Risk management strategies</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+       
+        <!-- Community Section - Please Call Me Champ Style -->
+        <section class="block-section mb-32 p-10 relative">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-5xl font-bold mb-16 animated-text">
+                    <span style="color: var(--accent);">Community</span>
+                    <span> Highlights</span>
+                </h2>
+               
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="relative p-1">
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary to-secondary opacity-50 blur-lg"></div>
+                        <div class="relative bg-gray-900 p-8 rounded-lg h-full">
+                            <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--primary);">Educational Resources</h3>
+                            <p class="opacity-80 leading-relaxed">Exclusive webinars, tutorials, and research reports on blockchain technology, trading strategies, and market analysis.</p>
+                        </div>
+                    </div>
+                   
+                    <div class="relative p-1">
+                        <div class="absolute inset-0 bg-gradient-to-br from-secondary to-accent opacity-50 blur-lg"></div>
+                        <div class="relative bg-gray-900 p-8 rounded-lg h-full">
+                            <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--secondary);">Expert AMAs</h3>
+                            <p class="opacity-80 leading-relaxed">Regular Q&A sessions with industry leaders, successful traders, and blockchain innovators from around the world.</p>
+                        </div>
+                    </div>
+                   
+                    <div class="relative p-1">
+                        <div class="absolute inset-0 bg-gradient-to-br from-accent to-primary opacity-50 blur-lg"></div>
+                        <div class="relative bg-gray-900 p-8 rounded-lg h-full">
+                            <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--accent);">Trading Competitions</h3>
+                            <p class="opacity-80 leading-relaxed">Monthly competitions with substantial prizes to sharpen your trading skills and learn from top performers.</p>
+                        </div>
+                    </div>
+                   
+                    <div class="relative p-1">
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary to-accent opacity-50 blur-lg"></div>
+                        <div class="relative bg-gray-900 p-8 rounded-lg h-full">
+                            <h3 class="text-2xl font-bold mb-4 mono" style="color: var(--primary);">Networking Opportunities</h3>
+                            <p class="opacity-80 leading-relaxed">Connect with like-minded individuals, potential collaborators, and investors in our vibrant community.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+       
+        <!-- Join Section -->
+        <section id="join" class="block-section p-10 rounded-lg relative">
+            <div class="absolute inset-0 grid-dots"></div>
+            <div class="max-w-4xl mx-auto text-center relative z-10">
+                <h2 class="text-5xl font-bold mb-8 animated-text">
+                    <span style="color: var(--primary);">Join</span>
+                    <span> DualHelix Capital</span>
+                </h2>
+               
+                <p class="text-xl opacity-80 leading-relaxed mb-12 max-w-3xl mx-auto">Ready to elevate your trading and investment strategies? Join our Discord community today and gain access to exclusive tools, insights, and a network of dedicated professionals.</p>
+               
+                <a href="https://discord.gg/3nqZCmzwbe" class="hover-grow inline-block bg-gradient-to-r from-primary to-secondary text-white font-bold py-5 px-12 rounded-full text-xl transition-all duration-300 transform hover:scale-105">
+                    Launch Discord
+                </a>
+               
+                <div class="mt-16 flex flex-wrap justify-center gap-8">
+                    <div class="bg-gray-900 p-8 rounded-lg text-center w-64">
+                        <div class="text-4xl font-bold mb-2" style="color: var(--primary);">3,500+</div>
+                        <div class="text-lg opacity-80">Community Members</div>
+                    </div>
+                   
+                    <div class="bg-gray-900 p-8 rounded-lg text-center w-64">
+                        <div class="text-4xl font-bold mb-2" style="color: var(--secondary);">24/7</div>
+                        <div class="text-lg opacity-80">Market Analysis</div>
+                    </div>
+                   
+                    <div class="bg-gray-900 p-8 rounded-lg text-center w-64">
+                        <div class="text-4xl font-bold mb-2" style="color: var(--accent);">50+</div>
+                        <div class="text-lg opacity-80">Expert Contributors</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+   
+    <!-- Footer -->
+    <footer class="py-12 relative overflow-hidden">
+        <div class="color-bar mb-12"></div>
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-8 md:mb-0">
+                    <h2 class="text-3xl font-bold">
+                        <span style="color: var(--primary);">Dual</span>
+                        <span style="color: var(--secondary);">Helix</span>
+                        <span>Capital</span>
+                    </h2>
+                </div>
+               
+                <div class="flex space-x-8">
+                    <a href="https://x.com/HellcatTrades" class="hover-grow opacity-70 hover:opacity-100 transition-opacity">Twitter</a>
+                    <a href="https://web.telegram.org/a/#-1002643926516" class="hover-grow opacity-70 hover:opacity-100 transition-opacity">Telegram</a>
+                    <a href="https://github.com/" class="hover-grow opacity-70 hover:opacity-100 transition-opacity">GitHub</a>
+                    <a href="https://discord.gg/3nqZCmzwbe" class="hover-grow opacity-70 hover:opacity-100 transition-opacity">Discord</a>
+                </div>
+            </div>
+           
+            <div class="mt-12 pt-8 border-t border-gray-800 text-center text-sm opacity-60">
+                <p>© 2025 DualHelix Capital. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Custom cursor
+        document.addEventListener('DOMContentLoaded', () => {
+            const cursor = document.querySelector('.cursor');
+            const cursorFollower = document.querySelector('.cursor-follower');
+            const hoverElements = document.querySelectorAll('.hover-grow, a');
+           
+            document.addEventListener('mousemove', (e) => {
+                gsap.to(cursor, {
+                    x: e.clientX,
+                    y: e.clientY,
+                    duration: 0.1
+                });
+               
+                gsap.to(cursorFollower, {
+                    x: e.clientX,
+                    y: e.clientY,
+                    duration: 0.3
+                });
+            });
+           
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    cursor.style.width = '48px';
+                    cursor.style.height = '48px';
+                    cursorFollower.style.opacity = '0';
+                });
+               
+                element.addEventListener('mouseleave', () => {
+                    cursor.style.width = '24px';
+                    cursor.style.height = '24px';
+                    cursorFollower.style.opacity = '0.6';
+                });
+            });
+        });
+       
+        // Scroll animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const animatedElements = document.querySelectorAll('.animated-text');
+           
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                       
+                        // Staggered animation for spans
+                        const spans = entry.target.querySelectorAll('span');
+                        spans.forEach((span, index) => {
+                            setTimeout(() => {
+                                span.style.transform = 'translateY(0)';
+                                span.style.opacity = '1';
+                            }, index * 100);
+                        });
+                    }
+                });
+            }, { threshold: 0.1 });
+           
+            animatedElements.forEach(element => {
+                observer.observe(element);
+            });
+        });
+       
+        // 3D DNA Helix Animation - Hyperbolic inspired
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Three.js scene
+            const container = document.getElementById('helix-animation');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+           
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+           
+            // Create helix
+            const helix = new THREE.Group();
+            scene.add(helix);
+           
+            // Strand 1
+            for (let i = 0; i < 50; i++) {
+                const geometry = new THREE.SphereGeometry(0.2, 16, 16);
+                const material = new THREE.MeshBasicMaterial({ color: 0x47f0ee });
+                const sphere = new THREE.Mesh(geometry, material);
+               
+                const angle = i * 0.3;
+                const radius = 3;
+                sphere.position.x = Math.cos(angle) * radius;
+                sphere.position.y = i * 0.4 - 10;
+                sphere.position.z = Math.sin(angle) * radius;
+               
+                helix.add(sphere);
+            }
+           
+            // Strand 2
+            for (let i = 0; i < 50; i++) {
+                const geometry = new THREE.SphereGeometry(0.2, 16, 16);
+                const material = new THREE.MeshBasicMaterial({ color: 0x9B59B6 });
+                const sphere = new THREE.Mesh(geometry, material);
+               
+                const angle = i * 0.3 + Math.PI;
+                const radius = 3;
+                sphere.position.x = Math.cos(angle) * radius;
+                sphere.position.y = i * 0.4 - 10;
+                sphere.position.z = Math.sin(angle) * radius;
+               
+                helix.add(sphere);
+            }
+           
+            // Position camera
+            camera.position.z = 10;
+           
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                helix.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+           
+            animate();
+           
+            // Handle resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        });
+    </script>
+</body>
+</html>
