@@ -173,12 +173,43 @@
             background: linear-gradient(90deg, transparent, var(--primary), transparent);
             transform: rotate(-5deg) scale(1.5);
         }
+
+        /* 3D Favicon Styles */
+        .logo-container {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            width: 60px;
+            height: 60px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        #logo-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: block;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 768px) {
+            .logo-container {
+                width: 40px;
+                height: 40px;
+            }
+        }
     </style>
 </head>
 <body class="relative">
     <!-- Custom Cursor -->
     <div class="cursor"></div>
     <div class="cursor-follower"></div>
+   
+    <!-- 3D Favicon Logo -->
+    <div class="logo-container">
+        <canvas id="logo-canvas"></canvas>
+    </div>
    
     <!-- Hero Section -->
     <header class="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
@@ -192,7 +223,7 @@
                 <h1 class="text-6xl md:text-8xl font-extrabold mb-6 animated-text visible">
                     <span style="color: var(--primary);">Dual</span>
                     <span style="color: var(--secondary);">Helix</span>
-                    <span class="text-white">Capital</span>
+                    <span class="text-gold">Capital</span>
                 </h1>
                
                 <p class="text-xl md:text-2xl max-w-3xl mx-auto opacity-75 mb-10 animated-text visible">
@@ -573,6 +604,175 @@
                 renderer.setSize(container.clientWidth, container.clientHeight);
             });
         });
+        
+        // 3D DualHelix Logo/Favicon
+        document.addEventListener('DOMContentLoaded', function() {
+            initLogo();
+        });
+        
+        // Create 3D Logo/Favicon
+        function initLogo() {
+            const canvas = document.getElementById('logo-canvas');
+            const container = document.querySelector('.logo-container');
+            
+            // Get the actual container size
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            const renderer = new THREE.WebGLRenderer({
+                canvas,
+                alpha: true,
+                antialias: true
+            });
+           
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(containerWidth, containerHeight);
+           
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
+            camera.position.z = 5;
+           
+            // Create helix shape
+            const helixGroup = new THREE.Group();
+           
+            // First helix strand
+            const helix1 = new THREE.Group();
+            const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+            const material1 = new THREE.MeshBasicMaterial({ color: 0x47f0ee }); // Match primary color
+           
+            // Second helix strand
+            const helix2 = new THREE.Group();
+            const material2 = new THREE.MeshBasicMaterial({ color: 0x9B59B6 }); // Match secondary color
+           
+            // Create helix strands
+            const points = 12;
+            const radius = 1.5;
+            const scaleMultiplier = 1.7;
+           
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2;
+                const height = (i / points) * 2 - 1;
+               
+                // First helix
+                const sphere1 = new THREE.Mesh(sphereGeometry, material1);
+                sphere1.position.set(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                );
+                sphere1.scale.set(0.7, 0.7, 0.7);
+                helix1.add(sphere1);
+               
+                // Second helix (offset by half a turn)
+                const sphere2 = new THREE.Mesh(sphereGeometry, material2);
+                sphere2.position.set(
+                    Math.cos(angle + Math.PI) * radius,
+                    height,
+                    Math.sin(angle + Math.PI) * radius
+                );
+                sphere2.scale.set(0.7, 0.7, 0.7);
+                helix2.add(sphere2);
+            }
+            
+            // Scale the entire helix group
+            helixGroup.scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+           
+            helixGroup.add(helix1);
+            helixGroup.add(helix2);
+            scene.add(helixGroup);
+           
+            // Mouse interaction
+            let mouseX = 0, mouseY = 0;
+            let targetRotationX = 0, targetRotationY = 0;
+           
+            canvas.addEventListener('mousemove', (event) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = ((event.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+                mouseY = -((event.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+               
+                targetRotationX = mouseY * 2;
+                targetRotationY = mouseX * 2;
+            });
+           
+            // Animation
+            const animate = () => {
+                requestAnimationFrame(animate);
+               
+                helixGroup.rotation.y += 0.01;
+               
+                // Smooth rotation towards target based on mouse position
+                helixGroup.rotation.x += (targetRotationX - helixGroup.rotation.x) * 0.05;
+                helixGroup.rotation.y += (targetRotationY - helixGroup.rotation.y) * 0.05;
+               
+                renderer.render(scene, camera);
+            };
+           
+            animate();
+           
+            // Handle window resize AND container size changes
+            function updateRendererSize() {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(newWidth, newHeight);
+            }
+            
+            window.addEventListener('resize', updateRendererSize);
+            
+            // Create dynamic favicon
+            createDynamicFavicon();
+        }
+        
+        // Create actual favicon for browser tab
+        function createDynamicFavicon() {
+            // Create an offscreen canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+            gradient.addColorStop(0, '#0a0a12');
+            gradient.addColorStop(1, '#1a1a24');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Draw simplified DH logo
+            ctx.beginPath();
+            ctx.arc(16, 10, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#47f0ee';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(16, 22, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#9B59B6';
+            ctx.fill();
+            
+            // Connect the circles with lines
+            ctx.beginPath();
+            ctx.moveTo(12, 12);
+            ctx.lineTo(12, 20);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#47f0ee';
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(20, 12);
+            ctx.lineTo(20, 20);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#9B59B6';
+            ctx.stroke();
+            
+            // Apply to page favicon
+            const link = document.createElement('link');
+            link.type = 'image/x-icon';
+            link.rel = 'shortcut icon';
+            link.href = canvas.toDataURL('image/png');
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
     </script>
 </body>
 </html>
